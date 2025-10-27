@@ -2,7 +2,11 @@ pipeline {
   agent any
 
   environment {
-    SONAR_HOST_URL = 'http://10.30.212.63:9000'
+    // URL de tu SonarQube
+    SONAR_HOST_URL      = 'http://10.30.212.63:9000'
+
+    // Memoria para el proceso Java del SonarScanner (ajústalo si necesitas)
+    SONAR_SCANNER_OPTS  = '-Xmx1024m'
   }
 
   stages {
@@ -15,20 +19,21 @@ pipeline {
     stage('SonarQube Analysis') {
       steps {
         script {
-          // "qube" = Name del SonarQube Scanner en Manage Jenkins → Tools
-          def scannerHome = tool name: 'qube', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+          // Ruta del SonarScanner instalado en "Manage Jenkins > Tools" con el nombre 'qube'
+          def scannerHome = tool 'qube'
 
-          // "server-sonar-pipeline" = Name del servidor en Manage Jenkins → System → SonarQube servers
+          // Usa la configuración de SonarQube definida en Jenkins (Manage Jenkins > System)
           withSonarQubeEnv('server-sonar-pipeline') {
             sh """
-              "${scannerHome}/bin/sonar-scanner" \
+              ${scannerHome}/bin/sonar-scanner \
                 -Dsonar.host.url=${SONAR_HOST_URL} \
                 -Dsonar.projectKey=DVWA-escanner \
                 -Dsonar.projectName=DVWA-Scan \
                 -Dsonar.projectVersion=1.0 \
                 -Dsonar.sources=. \
                 -Dsonar.exclusions=**/node_modules/**,**/vendor/**,**/dist/**,**/build/**,**/*.min.js \
-                -Dsonar.sourceEncoding=UTF-8
+                -Dsonar.sourceEncoding=UTF-8 \
+                -Dsonar.javascript.node.maxSpace=2048
             """
           }
         }
