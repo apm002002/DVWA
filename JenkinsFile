@@ -1,0 +1,35 @@
+pipeline {
+  agent any
+  tools { sonarQubeScanner 'qube' }  
+  environment {
+    SONAR_HOST_URL = 'http://10.30.212.63:9000'
+  }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('server-sonar-pipeline') {  
+          sh """
+            sonar-scanner \
+              -Dsonar.host.url=${SONAR_HOST_URL} \
+              -Dsonar.projectKey=DVWA-escanner \
+              -Dsonar.projectName=DVWA-Scan \
+              -Dsonar.projectVersion=1.0 \
+              -Dsonar.sources=. \
+              -Dsonar.exclusions=**/node_modules/**,**/vendor/**,**/dist/**,**/build/**,**/*.min.js \
+              -Dsonar.sourceEncoding=UTF-8
+          """
+        }
+      }
+    }
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 10, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+  }
+}
