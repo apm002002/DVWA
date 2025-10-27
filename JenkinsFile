@@ -1,16 +1,19 @@
 pipeline {
   agent any
-  tools { sonarQubeScanner 'qube' }  
+  tools {
+    // Debe coincidir con el nombre de la herramienta en Tools: "qube"
+    hudson.plugins.sonar.SonarRunnerInstallation 'qube'
+  }
   environment {
     SONAR_HOST_URL = 'http://10.30.212.63:9000'
   }
   stages {
-    stage('Checkout') {
-      steps { checkout scm }
-    }
+    stage('Checkout') { steps { checkout scm } }
+
     stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv('server-sonar-pipeline') {  
+        // Usa tu nombre real del servidor SonarQube
+        withSonarQubeEnv('server-sonar-pipeline') {
           sh """
             sonar-scanner \
               -Dsonar.host.url=${SONAR_HOST_URL} \
@@ -24,6 +27,7 @@ pipeline {
         }
       }
     }
+
     stage('Quality Gate') {
       steps {
         timeout(time: 10, unit: 'MINUTES') {
